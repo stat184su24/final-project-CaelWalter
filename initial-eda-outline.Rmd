@@ -1,6 +1,6 @@
 ---
 title: "Initial EDA Basic Outline"
-author: "Name of Student"
+author: "Cael Walter"
 output: html_notebook
 ---
 
@@ -10,6 +10,9 @@ This is an outline for your Initial EDA. You can follow this outline, or you can
 
 State your specific research question and why it is interesting. 
 
+Research Question: How do the Pittsburgh Pirates and the Chicago Cubs compare in terms of performance metrics over the past decade? (maybe less years)
+
+I want to study this topic because I have have played baseball basically all my life and I watch a lot of baseball. I especially watch the Pirates because they are my favorite team and the Cubs are their rivals. My goal is to understand just how close these two teams have been over the years. 
 
 
 ## Data Processing 
@@ -18,11 +21,31 @@ State your specific research question and why it is interesting.
 
 Include R code and written explanation to import your **TWO** data sets.
 
+
+# WebScraping
+
+
+# Web scraping Head-to-Head Game Data from ESPN
+"https://www.espn.com/mlb/scoreboard/_/date/20160613"
+
+
+
 #### Data Wrangling 
 
 Include R code and written explanation for wangling your data (you can make multiple wrangled data sets). 
 
+# Wrangling team performance data to include only Pirates and Cubs for the past decade
+team_performance <- team_data %>%
+  filter(Team %in% c("Pittsburgh Pirates", "Chicago Cubs") & Year >= 2013)
 
+
+head_to_head_cleaned <- head_to_head_data %>%
+  filter(str_detect(Team1, "Pirates|Cubs") & str_detect(Team2, "Pirates|Cubs")) %>%
+  mutate(Date = as.Date(Date, "%m/%d/%Y"))
+
+
+combined_data <- team_performance %>%
+  left_join(head_to_head_cleaned, by = "Date")
 
 
 ## Data Visualization
@@ -31,11 +54,55 @@ Include R code and written explanation for wangling your data (you can make mult
 
 Include R code to make one data visualization (I would encourage you to use 3 or more variables). Include a brief written description of what your graph shows. Is this graph helpful in answering your research question? If it is helpful, will you need to add/modify anything in this graph in the final report? 
 
+# Seasonal Performance Trends
+ggplot(team_performance, aes(x = Year, y = Wins, color = Team)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Seasonal Performance Trends of Pirates and Cubs",
+       x = "Year",
+       y = "Wins") +
+  theme_minimal()
+  
+Description: This line plot shows the number of wins for the Pittsburgh Pirates and the Chicago Cubs over the past decade. It helps in visualizing the performance trends and comparing the consistency and peaks of both teams.
+
+Is this graph helpful?: Yes, it provides a clear comparison of the seasonal performance of both teams. For the final report, it might be useful to add markers for significant events or changes in team management.
+
 #### Plot 2
 
 Include R code to make one data visualization (I would encourage you to use 3 or more variables). Include a brief written description of what your graph shows. Is this graph helpful in answering your research question? If it is helpful, will you need to add/modify anything in this graph in the final report? 
+
+Head-to-Head Game Outcomes
+ggplot(head_to_head_cleaned, aes(x = Date, y = as.numeric(as.character(Score1)), color = Team1)) +
+  geom_point() +
+  geom_line() +
+  geom_point(aes(y = as.numeric(as.character(Score2)), color = Team2)) +
+  geom_line(aes(y = as.numeric(as.character(Score2)), color = Team2)) +
+  labs(title = "Head-to-Head Game Outcomes Between Pirates and Cubs",
+       x = "Date",
+       y = "Scores") +
+  theme_minimal()
+Description: This plot visualizes the scores of head-to-head games between the Pittsburgh Pirates and the Chicago Cubs over the past decade. Each point represents the score of a game on a specific date.
+
+Is this graph helpful?: Yes, it provides insights into the competitiveness of the games and highlights the performance in direct matchups. For the final report, adding annotations for notable games or events could enhance the interpretation.
+
+## Head-to-Head Game Outcomes
+ggplot(head_to_head_cleaned, aes(x = Date, y = as.numeric(as.character(Score1)), color = Team1)) +
+  geom_point() +
+  geom_line() +
+  geom_point(aes(y = as.numeric(as.character(Score2)), color = Team2)) +
+  geom_line(aes(y = as.numeric(as.character(Score2)), color = Team2)) +
+  labs(title = "Head-to-Head Game Outcomes Between Pirates and Cubs",
+       x = "Date",
+       y = "Scores") +
+  theme_minimal()
+Description: This plot visualizes the scores of head-to-head games between the Pittsburgh Pirates and the Chicago Cubs over the past decade. Each point represents the score of a game on a specific date.
+
+Is this graph helpful?: Yes, it provides insights into the competitiveness of the games and highlights the performance in direct matchups. For the final report, adding annotations for notable games or events could enhance the interpretation.
+
 
 
 ## Conclusion
 
 Include your initial intuition as to what the answer to your research question is using the data sets and visualizations you created. 
+
+Based on the initial data sets and visualizations, it appears that both the Pittsburgh Pirates and the Chicago Cubs have had varying levels of success over the past decade. The line plot shows the trends in seasonal performance, while the head-to-head game outcomes provide a detailed look at direct competition. My initial intuition is that the Cubs have had more consistent success, particularly in recent years, but the Pirates have also had periods of strong performance. Further analysis with additional data wrangling and visualization will provide a more comprehensive answer to the research question.
