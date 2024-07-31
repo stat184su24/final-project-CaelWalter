@@ -71,7 +71,7 @@ Is this graph helpful?: Yes, it provides a clear comparison of the seasonal perf
 
 Include R code to make one data visualization (I would encourage you to use 3 or more variables). Include a brief written description of what your graph shows. Is this graph helpful in answering your research question? If it is helpful, will you need to add/modify anything in this graph in the final report? 
 
-Head-to-Head Game Outcomes
+#Head-to-Head Game Outcomes
 ggplot(head_to_head_cleaned, aes(x = Date, y = as.numeric(as.character(Score1)), color = Team1)) +
   geom_point() +
   geom_line() +
