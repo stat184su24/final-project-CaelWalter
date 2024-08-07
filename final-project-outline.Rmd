@@ -1,6 +1,6 @@
 ---
 title: "Final Project Basic Outline"
-author: "Student name"
+author: "Cael Walter"
 output: html_notebook
 ---
 
@@ -9,29 +9,219 @@ This is an outline for your final project. You can follow this outline, or you c
 ## Research Question 
 
 State your general specific question and why it is interesting. 
+Research Question: How do the Pittsburgh Pirates and the Chicago Cubs compare in terms of performance metrics over the past decade?
 
+Why This Question is Interesting: The rivalry between the Pittsburgh Pirates and the Chicago Cubs is a significant one in MLB, with both teams having experienced periods of success and struggle. Analyzing their performance metrics over the past decade can provide insights into team strategies, player contributions, and overall competitiveness.
 
 
 ## Data Processing 
 
+
 #### Data Intake 
 
 Include R code and a written explanation to import your **TWO** data sets.
+```{r}
+# Load necessary libraries
+library(tidyverse)
+library(rvest)
+
+# Define function to scrape boxscore data
+scrape_boxscore <- function(url) {
+  page <- read_html(url)
+  
+  teams <- page %>%
+    html_nodes(".team-name a") %>%
+    html_text()
+  
+  scores <- page %>%
+    html_nodes(".score") %>%
+    html_text() %>%
+    as.numeric()
+  
+  data.frame(
+    Team1 = teams[1],
+    Score1 = scores[1],
+    Team2 = teams[2],
+    Score2 = scores[2],
+    Date = Sys.Date() # Placeholder for date extraction
+  )
+}
+
+# Scrape the four provided boxscore links
+page <- read_html("https://www.espn.com/mlb/boxscore/_/gameId/401569056#:~:text=Play%2Dby%2DPlay-,CHC,0,-WIN")
+tableList <- page %>%
+  html_nodes(css = "table") %>%
+  html_table(fill = TRUE)
+
+box_table1 <- tableList[[2]]
+
+
+head(box_table1)
+
+
+page <- read_html("https://www.espn.com/mlb/boxscore/_/gameId/401472023#:~:text=Play%2Dby%2DPlay-,PIT,0,-WIN")
+tableList <- page %>%
+  html_nodes(css = "table") %>%
+  html_table(fill = TRUE)
+
+box_table2 <- tableList[[2]]
+
+
+head(box_table2)
+
+page <- read_html("https://www.espn.com/mlb/boxscore/_/gameId/401354772#:~:text=Play%2Dby%2DPlay-,PIT,0,-WIN")
+tableList <- page %>%
+  html_nodes(css = "table") %>%
+  html_table(fill = TRUE)
+
+box_table3 <- tableList[[2]]
+
+
+head(box_table3)
+
+page <- read_html("https://www.espn.com/mlb/boxscore/_/gameId/401227563#:~:text=Play%2Dby%2DPlay-,PIT,2,-WIN")
+tableList <- page %>%
+  html_nodes(css = "table") %>%
+  html_table(fill = TRUE)
+
+box_table4 <- tableList[[2]]
+
+
+head(box_table4)
+```
 
 #### Data Wrangling 
 
 Include R code and written explanation for wangling your data (you can make multiple wrangled data sets). 
+```{r}
+# Load necessary libraries
+library(tidyverse)
+library(rvest)
+library(reshape2)
 
+# Define a function to process each table and extract inning scores
+process_boxscore <- function(table, team) {
+  # Convert relevant columns to numeric and rename innings
+  innings <- table %>%
+    select(1:9) %>%
+    rename_with(~paste0("Inning", 1:9)) %>%
+    mutate(across(everything(), as.numeric))
+  
+  # Extract total runs, hits, and errors
+  scores <- table %>%
+    select(R, H, E) %>%
+    mutate(across(everything(), as.numeric))
+  
+  # Combine innings scores with total scores
+  combined <- bind_cols(innings, scores) %>%
+    mutate(Team = team, GameID = NA)  # Add Team and placeholder for GameID
+  
+  return(combined)
+}
+
+# Scrape the boxscore data from the given URLs
+page1 <- read_html("https://www.espn.com/mlb/boxscore/_/gameId/401569056")
+tableList1 <- page1 %>%
+  html_nodes(css = "table") %>%
+  html_table(fill = TRUE)
+box_table1 <- tableList1[[2]]
+
+page2 <- read_html("https://www.espn.com/mlb/boxscore/_/gameId/401472023")
+tableList2 <- page2 %>%
+  html_nodes(css = "table") %>%
+  html_table(fill = TRUE)
+box_table2 <- tableList2[[2]]
+
+page3 <- read_html("https://www.espn.com/mlb/boxscore/_/gameId/401354772")
+tableList3 <- page3 %>%
+  html_nodes(css = "table") %>%
+  html_table(fill = TRUE)
+box_table3 <- tableList3[[2]]
+
+page4 <- read_html("https://www.espn.com/mlb/boxscore/_/gameId/401227563")
+tableList4 <- page4 %>%
+  html_nodes(css = "table") %>%
+  html_table(fill = TRUE)
+box_table4 <- tableList4[[2]]
+
+# Process each boxscore table and add team information
+boxscore1 <- process_boxscore(box_table1, "CHC")
+boxscore2 <- process_boxscore(box_table2, "PIT")
+boxscore3 <- process_boxscore(box_table3, "PIT")
+boxscore4 <- process_boxscore(box_table4, "PIT")
+
+# Add GameID column for clarity
+boxscore1$GameID <- "May 11,2024"
+boxscore2$GameID <- "June 13,2023"
+boxscore3$GameID <- "May 16, 2022"
+boxscore4$GameID <- "May 9, 2021"
+
+# Combine all processed boxscore tables into one data frame
+all_boxscores <- bind_rows(boxscore1, boxscore2, boxscore3, boxscore4)
+
+# Ensure the Team column is present and properly formatted
+all_boxscores <- all_boxscores %>%
+  mutate(Team = as.factor(Team))
+
+# Preview the combined data frame
+head(all_boxscores)
+
+
+
+
+
+```
 
 
 
 ## Data Visualization
 
 Include R code and written explanation for your data visualization(s) with at least 3 variables. You must have **at least** one graph. You may have more than one (I would encourage you to have more than one). 
+```{r}
+# Load necessary library for visualization
+library(ggplot2)
+library(reshape2)
 
+# Melt the data for better visualization
+melted_boxscores <- melt(all_boxscores, id.vars = c("GameID", "Team"), variable.name = "Inning", value.name = "Score")
+
+# Example Visualization 1: Inning-by-Inning Scores for Each Team
+ggplot(melted_boxscores %>% filter(grepl("^Inning", Inning)), aes(x = Inning, y = Score, color = Team, group = Team)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ GameID) +
+  labs(title = "Inning-by-Inning Scores for Each Team", x = "Inning", y = "Score")
+```
+
+```{r}
+# Example Visualization 2: Total Runs by Team and Game
+ggplot(all_boxscores, aes(x = GameID, y = R, fill = Team)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Total Runs by Team and Game", x = "Game ID", y = "Total Runs")
+```
+
+```{r}
+# Example Visualization 3: Hits by Team and Game
+ggplot(all_boxscores, aes(x = GameID, y = H, fill = Team)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Hits by Team and Game", x = "Game ID", y = "Hits")
+
+```
 
 
 
 ## Conclusion
 
 Answer your research question using the data sets and visualizations you created. 
+
+From the analysis and visualizations, we can conclude that:
+
+PIT (Pittsburgh Pirates):
+Consistently performed well across the games with a significant number of hits and runs.
+Showed a strong distribution of scores, particularly in the middle innings (e.g., 4th and 6th innings in the May 11, 2024 game).
+
+CHC (Chicago Cubs):
+Had a notable performance in game June 13, 2023, scoring 10 runs and having a considerable number of hits.
+Struggled in the other games where they failed to score any runs.
+
+Overall, PIT demonstrated consistent offensive strength across the analyzed games, whereas CHC had a standout performance in one game but lacked consistency across the others. This analysis highlights the varying performances of the teams and provides insight into their scoring patterns and overall effectiveness in the recent matches.
